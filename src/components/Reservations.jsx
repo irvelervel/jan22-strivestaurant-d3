@@ -2,7 +2,7 @@
 // to the user!
 
 import { Component } from "react";
-import { ListGroup } from "react-bootstrap";
+import { ListGroup, Spinner, Alert } from "react-bootstrap";
 
 class Reservations extends Component {
   // for managing my reservations, I need to tell the interface HOW to present them
@@ -24,6 +24,8 @@ class Reservations extends Component {
   state = {
     // 1)
     reservations: [], // <-- reservations is ALWAYS going to be an array, let's default it with an empty one
+    isLoading: true,
+    isError: false,
   };
 
   componentDidMount = () => {
@@ -35,6 +37,8 @@ class Reservations extends Component {
     // ...turns out this is the PERFECT place for invoking a fetch()
     console.log("I'm componentDidMount!");
     // it's getting called just AFTER the initial render!
+    // 3)
+    // 4)
     this.fetchReservations();
     // so we're going to do your fetch() right here!
   };
@@ -42,23 +46,34 @@ class Reservations extends Component {
   fetchReservations = async () => {
     try {
       let response = await fetch(
-        "https://striveschool-api.herokuapp.com/api/reservationSSSS"
+        "https://striveschool-api.herokuapp.com/api/reservation"
       );
       if (response.ok) {
         // everything went well
         let data = await response.json();
         console.log("reservations:", data);
+        // 5)
         this.setState({
           reservations: data,
+          isLoading: false,
         });
         // every time you set the state or you receive a new prop,
         // the render() method fires again!
       } else {
-        // something was wrong
+        // something was wrong on the server or if my endpoint is incorrect
         console.log("an error occurred");
+        this.setState({
+          isLoading: false,
+          isError: true,
+        });
       }
     } catch (error) {
       console.log(error);
+      // I will fall here if there's a network problem on my side
+      this.setState({
+        isLoading: false,
+        isError: true,
+      });
     }
   };
 
@@ -67,14 +82,38 @@ class Reservations extends Component {
     // can we do the fetch here? the answer is NO
     return (
       <div>
-        <h2>BOOKED TABLES</h2> {/* 2) */}
+        <h2>BOOKED TABLES</h2>
+        {/* I want the Spinner to be there if isLoading === true */}
+        {/* I want the Spinner to disappear if isLoading === false */}
+
+        {/* SHORT CIRCUIT && */}
+        {this.state.isLoading && (
+          <Spinner animation="border" variant="success" />
+        )}
+
+        {this.state.isError && (
+          <Alert variant="danger">An error occurred 😔</Alert>
+        )}
+
+        {/* 2) (initial render) */}
+        {/* 6) (after the setState) */}
         <ListGroup>
           {/* having this.state.reservations ALWAYS as an array allows me to map it in every moment */}
-          {this.state.reservations.map((res) => (
-            <ListGroup.Item key={res._id}>
-              {res.name} for {res.numberOfPeople} at {res.dateTime}
-            </ListGroup.Item>
-          ))}
+          {!this.state.isLoading &&
+          !this.state.isError &&
+          this.state.reservations.length === 0 ? (
+            //   in this case I don't have any reservations to show!
+            <ListGroup.Item>No reservations yet! 🙄</ListGroup.Item>
+          ) : (
+            this.state.reservations.map((res) => (
+              <ListGroup.Item key={res._id}>
+                {res.name} for {res.numberOfPeople} at {res.dateTime}
+              </ListGroup.Item>
+            ))
+            // I want to show this message if we're not in the initial fetch
+            // (because in that case the reservations array will be indeed empty)
+            // and the resulting array from the API is an empty one
+          )}
         </ListGroup>
       </div>
     );
