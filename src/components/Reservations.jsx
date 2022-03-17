@@ -3,6 +3,7 @@
 
 import { Component } from "react";
 import { ListGroup, Spinner, Alert } from "react-bootstrap";
+import { parseISO, format } from "date-fns";
 
 class Reservations extends Component {
   // for managing my reservations, I need to tell the interface HOW to present them
@@ -107,7 +108,15 @@ class Reservations extends Component {
           ) : (
             this.state.reservations.map((res) => (
               <ListGroup.Item key={res._id}>
-                {res.name} for {res.numberOfPeople} at {res.dateTime}
+                {/* the process of converting dateTime into something more */}
+                {/* humanly readable goes through initially converting it into */}
+                {/* a proper Date */}
+                {/* once we figure out the Date from that string, we can at that point */}
+                {/* convert it into another string, something better */}
+                {/* 1) taking our string and converting it into a Date object (using parseISO()) */}
+                {/* 2) taking that Date and convert it back into another, better, string (using format()) */}
+                {res.name} for {res.numberOfPeople} at{" "}
+                {format(parseISO(res.dateTime), "MMMM do yyyy | HH:mm")}
               </ListGroup.Item>
             ))
             // I want to show this message if we're not in the initial fetch
